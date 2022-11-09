@@ -1,0 +1,121 @@
+public class Main {
+  public static void GetMessage() throws
+  {
+    JevkoParser() parser;
+
+    string str = parser.parse("a [b] c").toString();
+
+    Console.WriteLine(str);
+  }
+}
+
+public class JevkoParser
+{
+  int escaper = '`';
+  int opener = '[';
+  int closer = ']';
+
+  public Jevko() parse(string str) throws {
+    Stack<Jevko()> parents;
+    Jevko() parent;
+    string prefix = "";
+    int h = 0;
+    bool isEscaped = false;
+    int line = 1;
+    int column = 1;
+
+    int i = 0;
+    while (i < str.Length) {
+      int c = str[i];
+
+      if (isEscaped) {
+        if (c == escaper || c == opener || c == closer) isEscaped = false;
+        else throw $"Invalid digraph ({escaper}{c}) at {line}:{column}!";
+      } else if (c == escaper) {
+        prefix = prefix + str.Substring(h, i - h);
+        h = i + 1;
+        isEscaped = true;
+      } else if (c == opener) {
+        Jevko() jevko;
+        Subjevko() sub;
+        sub.SetPrefix(prefix + str.Substring(h, i - h));
+        sub.SetJevko(jevko);
+        parent.GetSubjevkos().Add(sub);
+        prefix = "";
+        h = i + 1;
+        parents.Push(parent);
+        parent = jevko;
+      } else if (c == closer) {
+        parent.SetSuffix(prefix + str.Substring(h, i - h));
+        prefix = "";
+        h = i + 1;
+        if (parents.Count < 1) throw ($"Unexpected closer ({closer}) at {line}:{column}!");
+        parent = parents.Pop();
+      }
+
+      if (c == '\n') {
+        ++line;
+        column = 1;
+      } else {
+        ++column;
+      }
+
+      ++i;
+    }
+    if (isEscaped) throw ($"Unexpected end after escaper ({escaper})!");
+
+    if (parents.Count > 0) throw ($"Unexpected end: missing {parents.Count} closer(s) ({closer})!");
+
+    parent.SetSuffix(prefix + str.Substring(h));
+
+    return parent;
+  }
+}
+
+public class Jevko {
+  List<Subjevko> subjevkos;
+  string suffix;
+  //JevkoParser p;
+
+  public List<Subjevko> GetSubjevkos() {
+    return subjevkos;
+  }
+
+  public void SetSuffix(string value) {
+    suffix = value;
+  }
+
+  public string toString() {
+    string ret = "";
+
+    foreach (Subjevko sub in subjevkos) {
+      // todo:
+      // ret += '${Jevko.escape(sub.prefix)}${opener}${sub.jevko}${closer}';
+      ret = ret + $"{sub.GetPrefix()}[{sub.GetJevko().toString()}]";
+    }
+    // todo:
+    //return ret + Jevko.escape(this.suffix);
+    return ret + suffix;
+  }
+}
+
+public class Subjevko {
+  string prefix;
+  Jevko jevko;
+
+  public string GetPrefix() {
+    return prefix;
+  }
+
+  public Jevko GetJevko() {
+    return jevko;
+  }
+
+  public void SetPrefix(string value) {
+    prefix = value;
+  }
+
+  public void SetJevko(Jevko value) {
+    jevko = value;
+  }
+}
